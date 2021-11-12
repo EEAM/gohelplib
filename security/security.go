@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	errmgmt "github.com/EEAM/gohelplib/errormanagement"
 )
 
 type Token struct {
@@ -38,7 +39,7 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	log.Println(string(body))
 
 	if err != nil && resp.StatusCode == 200 {
-		return "", types.ErrorAccessTokenInvalid{Url: endpointUrl, Code: resp.StatusCode, Message: bodyS}
+		return "", errmgmt.ErrorAccessTokenInvalid{Url: endpointUrl, Code: resp.StatusCode, Message: bodyS}
 	}
 
 	return bodyS, nil
