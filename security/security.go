@@ -31,6 +31,7 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	if err != nil {
 		return "", fmt.Errorf("error for creating http.Request for the endpoint: %v and url encoded parameter:\n%v", endpointUrl, queryString.Encode())
 	}
+	
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
