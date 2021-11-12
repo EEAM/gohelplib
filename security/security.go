@@ -1,6 +1,7 @@
 package security
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,7 +10,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	errmgmt "github.com/EEAM/gohelplib/errormanagement"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, error) {
@@ -26,7 +30,7 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	if err != nil {
 		return "", fmt.Errorf("error for creating http.Request for the endpoint: %v and url encoded parameter:\n%v", endpointUrl, queryString.Encode())
 	}
-	
+
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -38,4 +42,81 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	}
 
 	return bodyS, nil
+}
+
+type Maker interface {
+	CreateToken(username string, duration time.Duration) (string, error)
+	VerifyToken(token string) (*Payload, error)
+}
+type Payload struct {
+	ID        uuid.UUID `json:"id"`
+	Username  string    `json:"username"`
+	IssuedAt  time.Time `json:"issued_at"`
+	ExpiredAt time.Time `json:"expired_at"`
+}
+
+type JWTMaker struct {
+	secretKey string
+}
+
+var (
+    ErrInvalidToken = errors.New("token is invalid")
+    ErrExpiredToken = errors.New("token has expired")
+)
+
+func (payload *Payload) Valid() error {
+	if time.Now().After(payload.ExpiredAt) {
+		return ErrExpiredToken
+	}
+	return nil
+}
+func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		_, ok := token.Method.(*jwt.SigningMethodHMAC)
+		if !ok {
+			return nil, ErrInvalidToken
+		}
+		return []byte(maker.secretKey), nil
+	}
+
+	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
+	if err != nil {
+		verr, ok := err.(*jwt.ValidationError)
+		if ok && errors.Is(verr.Inner, ErrExpiredToken) {
+			return nil, ErrExpiredToken
+		}
+		return nil, ErrInvalidToken
+	}
+
+	payload, ok := jwtToken.Claims.(*Payload)
+	if !ok {
+		return nil, ErrInvalidToken
+	}
+
+	return payload, nil
+}
+
+func (maker *JWTMaker) CreateToken(username string, duration time.Duration) (string, error) {
+	payload, err := NewPayload(username, duration)
+	if err != nil {
+		return "", err
+	}
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	return jwtToken.SignedString([]byte(maker.secretKey))
+}
+
+func NewPayload(username string, duration time.Duration) (*Payload, error) {
+    tokenID, err := uuid.NewRandom()
+    if err != nil {
+        return nil, err
+    }
+
+    payload := &Payload{
+        ID:        tokenID,
+        Username:  username,
+        IssuedAt:  time.Now(),
+        ExpiredAt: time.Now().Add(duration),
+    }
+    return payload, nil
 }
