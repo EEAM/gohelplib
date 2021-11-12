@@ -70,6 +70,8 @@ func (payload *Payload) Valid() error {
 	}
 	return nil
 }
+
+
 func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
