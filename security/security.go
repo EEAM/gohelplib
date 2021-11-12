@@ -26,7 +26,6 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Content-Length", strconv.Itoa(len(queryString.Encode())))
-
 	resp, err := client.Do(req)
 
 	if err != nil {
