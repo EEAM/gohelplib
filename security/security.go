@@ -12,11 +12,6 @@ import (
 	errmgmt "github.com/EEAM/gohelplib/errormanagement"
 )
 
-type Token struct {
-	Key            string
-	ExpirationDate time.Time
-}
-
 func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, error) {
 
 	client := &http.Client{}
