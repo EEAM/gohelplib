@@ -60,8 +60,8 @@ type JWTMaker struct {
 }
 
 var (
-    ErrInvalidToken = errors.New("token is invalid")
-    ErrExpiredToken = errors.New("token has expired")
+	ErrInvalidToken = errors.New("token is invalid")
+	ErrExpiredToken = errors.New("token has expired")
 )
 
 func (payload *Payload) Valid() error {
@@ -70,7 +70,6 @@ func (payload *Payload) Valid() error {
 	}
 	return nil
 }
-
 
 func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
@@ -108,17 +107,31 @@ func (maker *JWTMaker) CreateToken(username string, duration time.Duration) (str
 	return jwtToken.SignedString([]byte(maker.secretKey))
 }
 
-func NewPayload(username string, duration time.Duration) (*Payload, error) {
-    tokenID, err := uuid.NewRandom()
-    if err != nil {
-        return nil, err
-    }
+func ParseWithClaims(tokenString string) (jwt.Claims, error) {
 
-    payload := &Payload{
-        ID:        tokenID,
-        Username:  username,
-        IssuedAt:  time.Now(),
-        ExpiredAt: time.Now().Add(duration),
-    }
-    return payload, nil
+	token, err := jwt.Parse(tokenString, nil)
+	if token == nil {
+		return nil, err
+	}
+	claims, _ := token.Claims.(jwt.MapClaims)
+
+	for key, value := range claims {
+		fmt.Printf("%s\t%v\n", key, value)
+	}
+	return claims, nil
+}
+
+func NewPayload(username string, duration time.Duration) (*Payload, error) {
+	tokenID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	payload := &Payload{
+		ID:        tokenID,
+		Username:  username,
+		IssuedAt:  time.Now(),
+		ExpiredAt: time.Now().Add(duration),
+	}
+	return payload, nil
 }
