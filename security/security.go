@@ -3,12 +3,11 @@ package security
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
+
 	errmgmt "github.com/EEAM/gohelplib/errormanagement"
 )
 
@@ -26,12 +25,11 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 	if err != nil {
 		return "", fmt.Errorf("error for creating http.Request for the endpoint: %v and url encoded parameter:\n%v", endpointUrl, queryString.Encode())
 	}
-	
+
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	bodyS := string(body)
-	log.Println(string(body))
 
 	if err != nil && resp.StatusCode == 200 {
 		return "", errmgmt.ErrorAccessTokenInvalid{Url: endpointUrl, Code: resp.StatusCode, Message: bodyS}
