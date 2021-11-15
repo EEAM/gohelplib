@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	errmgmt "github.com/EEAM/gohelplib/errormanagement"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
