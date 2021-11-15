@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -127,7 +126,6 @@ func AquireTokenUrlEncoded(endpointUrl string, queryString url.Values) (string, 
 
 	body, err := ioutil.ReadAll(resp.Body)
 	bodyS := string(body)
-	log.Println(string(body))
 
 	if err != nil && resp.StatusCode == 200 {
 		return "", errmgmt.ErrorAccessTokenInvalid{Url: endpointUrl, Code: resp.StatusCode, Message: bodyS}
